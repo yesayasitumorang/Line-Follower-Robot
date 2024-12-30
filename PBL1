@@ -1,0 +1,112 @@
+#include <Arduino.h>
+
+// Definisi pin untuk motor DC
+#define IN1 D1 // Motor kanan - arah
+#define IN2 D2 // Motor kanan - kecepatan
+#define IN3 D3 // Motor kiri - arah
+#define IN4 D4 // Motor kiri - kecepatan
+
+// Definisi pin untuk sensor garis
+#define S1 D0  // Sensor kiri
+#define S2 D5  // Sensor tengah-kiri
+#define S3 D6  // Sensor tengah
+#define S4 D7  // Sensor tengah-kanan
+#define S5 D8  // Sensor kanan 
+
+// Variabel untuk menyimpan nilai sensor garis
+int sensorValue[5];
+
+// Variabel untuk menyimpan penghitung simpang
+int simpang = 0;
+
+// Kecepatan motor (sesuaikan sesuai kebutuhan)
+int kecepatanMotor = 150;
+
+void setup() {
+  // Inisialisasi komunikasi serial
+  Serial.begin(9600);
+
+  // Atur pin motor sebagai output
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  // Atur pin sensor sebagai input
+  pinMode(S1, INPUT);
+  pinMode(S2, INPUT);
+  pinMode(S3, INPUT);
+  pinMode(S4, INPUT);
+  pinMode(S5, INPUT);
+}
+
+void loop() {
+  // Baca nilai sensor garis
+  sensorValue[0] = digitalRead(S1);
+  sensorValue[1] = digitalRead(S2);
+  sensorValue[2] = digitalRead(S3);
+  sensorValue[3] = digitalRead(S4);
+  sensorValue[4] = digitalRead(S5);
+
+  // Logika kontrol line follower
+  // Cek jika semua sensor mendeteksi hitam (simpang)
+  if (sensorValue[0] == 1 && sensorValue[1] == 1 && sensorValue[2] == 1 && sensorValue[3] == 1 && sensorValue[4] == 1) {
+    simpang++; 
+    Serial.print("Simpang ke-");
+    Serial.println(simpang);
+
+    if (simpang == 1) {  // Simpang pertama, belok kiri
+      belokKiri();
+      delay(500); // Tunggu sebentar
+    } else if (simpang == 2) {  // Simpang kedua, belok kanan (contoh)
+      belokKanan();
+      delay(500); // Tunggu sebentar
+    } else if (simpang == 3) { 
+      //Hentikan robot pada Simpang Saraswati (Contoh kondisi - sesuaikan dengan kebutuhan)
+      stopRobot();
+    }
+
+    // Setelah berbelok, lanjutkan ikuti garis
+  } else {
+    // Kondisi garis lurus atau belokan
+    if (sensorValue[2] == 1) { // Sensor tengah mendeteksi garis
+      jalanLurus();
+    } else if (sensorValue[1] == 1 && sensorValue[3] == 0) { // Sensor kiri mendeteksi garis
+      belokKanan();
+    } else if (sensorValue[1] == 0 && sensorValue[3] == 1) { // Sensor kanan mendeteksi garis
+      belokKiri();
+    } else { // Tidak ada garis terdeteksi
+      stopRobot(); 
+    }
+  }
+}
+
+
+// Fungsi untuk mengontrol motor
+void jalanLurus() {
+  analogWrite(IN2, kecepatanMotor);
+  analogWrite(IN4, kecepatanMotor);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN3, HIGH);
+}
+
+void belokKiri() {
+  analogWrite(IN2, kecepatanMotor);
+  analogWrite(IN4, kecepatanMotor/2); // Kecepatan motor kiri lebih lambat untuk belok kiri
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN3, HIGH);
+}
+
+void belokKanan() {
+  analogWrite(IN2, kecepatanMotor/2); // Kecepatan motor kanan lebih lambat untuk belok kanan
+  analogWrite(IN4, kecepatanMotor);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN3, HIGH);  
+}
+
+void stopRobot() {
+  analogWrite(IN2, 0);
+  analogWrite(IN4, 0);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN3, LOW);
+} 
