@@ -186,10 +186,8 @@ void loop() {
 
 //fungsi gerak robot
 void mundur() {
-  digitalWrite(MOTOR_A_DIR, LOW);  // Motor A bergerak mundur
-  digitalWrite(MOTOR_B_DIR, LOW);  // Motor B bergerak mundur
-  analogWrite(PWM_A, 250);        // Kecepatan motor A
-  analogWrite(PWM_B, 250);
+  analogWrite(PWM_A, 0);       
+  analogWrite(PWM_B, 0);
 }
 
 void majuKuat() {
